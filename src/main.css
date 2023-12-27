@@ -1,0 +1,141 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  color: #dadada;
+  background-color: #101229;
+  font-size: 15px;
+  font-family: consolas;
+}
+/*#020322; #080933; #141733;*/
+
+main {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+section > * {
+  width: 100%;
+}
+
+.lpanel {
+  width: 40%;
+  padding: 24px 36px;
+}
+
+.rpanel {
+  width: 60%;
+  background-color: #03020f;
+  padding: 24px 60px;
+}
+
+/*#020016*/
+
+
+/* GENERAL */
+
+.subtitle {
+  font-weight: bold;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 20px;
+}
+
+.NA_block {
+  display: flex;
+  justify-content: center;
+  color: #c4c4c4;
+  height: 100%;
+}
+
+
+.flex {
+  display: flex;
+}
+
+.header {
+  width: 100%;
+}
+
+.header > * {
+  margin: auto 0;
+}
+
+section .container {
+  margin: 25px 0;
+}
+
+.container.block {
+  background-color: #020016; 
+}
+
+.action {
+  cursor: pointer;
+}
+
+.icon {
+  height: 18px;
+}
+
+.icon.large {
+  height: 24px;
+}
+
+/* #151443 */
+
+/* LEFT PANEL UNIQUE */
+
+.lpanel > .header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.lpanel > .header img {
+  height: 42px;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.container#pinned {
+  height: 160px;
+  border-radius: 10px;
+}
+
+.container#explorer {
+  height: calc(100% - 324px);
+  display: grid;
+  grid-template-rows: 40px 30px 1fr;
+}
+
+.explorer > .path {
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pinned .title {
+  font-weight: bold;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 24px;
+}
+
+.pathInput {
+  background-color: transparent;
+  border: 0;
+  outline: 0;
+  color: inherit;
+}

@@ -1,0 +1,68 @@
+.list .header {
+  display: flex;
+  flex-direction: row;
+  background-color: #020016;
+  padding: 0 20px;
+  font-weight: bold;
+  font-size: 14px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.list .column.right {
+  text-align: center;
+}
+
+.list .column {
+ width: 20%;
+ padding: 0 7.5px;
+}
+
+.list .column.xsmall {
+  width: 5%;
+}
+
+.list .column.small {
+  width: 10%;
+}
+
+.list .column.large {
+  width: 35%;
+}
+
+.list .column.xlarge {
+  width: 40%;
+}
+
+.list .column.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.list .row .column {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin: auto;
+}
+
+.list .row .column > * {
+  margin: auto;
+}
+
+.list .items {
+  overflow: auto;
+}
+
+.list .items .row {
+  display: flex;
+  flex-direction: row;
+  padding: 0 5px;
+  margin: 0 10px;
+  border-bottom: 1px solid #2c2950;
+  height: 44px;
+}
+
+.list .items .wrapper-row:hover {
+  background-color: #141733;
+  cursor: pointer;
+}
