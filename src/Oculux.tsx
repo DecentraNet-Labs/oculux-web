@@ -10,14 +10,6 @@ import {
   Files
 } from '@jackallabs/jackal.js-protos'
 
-//import { osmosis, getSigningOsmosisClient } from 'osmojs'
-//import { getRoutesForTrade, calcAmountWithSlippage } from "@osmonauts/math";
-import { coin } from '@cosmjs/amino';
-
-/*const {
-  swapExactAmountIn,
-} = osmosis.gamm.v1beta1.MessageComposer.withTypeUrl;
-*/
 import { WalletHandler, StorageHandler, IFiletreeParsedContents, FileIo, getFileTreeData } from 'jackal.js-plus'
 import IFileDetails from './interfaces/IFileDetails'
 import IVideoMetadata from './interfaces/IVideoMetadata'
@@ -85,98 +77,11 @@ function Oculux() {
     async function fn() {
       console.log("init")
       let wallet = await WalletHandler.trackWallet(walletConfig);
-      //const signer = wallet.getSigner()
-      /*await (window as any).keplr.enable("osmosis-1");
-
-      const offlineSigner = (window as any).getOfflineSigner("osmosis-1");
-  
-      const accounts = await offlineSigner.getAccounts();
-
-      const client = await getSigningOsmosisClient({
-        rpcEndpoint: "https://rpc.osmosis.zone/",
-        signer: offlineSigner // OfflineSigner
-      });
-
-      
-      //const tokenOutMinAmount = calcAmountWithSlippage("ibc/C360EF34A86D334F625E4CBB7DA3223AEA97174B61F35BB3758081A8160F7D9B", "");
-
-      const msgs = [swapExactAmountIn({
-        "sender": "osmo1l4c0w4mmz45d9ekhv35xqtcceek6zcg2j36d9m",
-        "routes": [
-          {
-            "poolId": BigInt(1496),
-            "tokenOutDenom": "ibc/C360EF34A86D334F625E4CBB7DA3223AEA97174B61F35BB3758081A8160F7D9B"
-          }
-        ],
-        tokenIn: coin(30000000000,"ibc/BADB06C54ADD5BC4C8B74982F961CB0287BAE326E799FCD8D03387EB8BB7D550"),
-        tokenOutMinAmount: "330000000"
-      })]
-
-      const fee = {
-        "gas": "760266",
-        "amount": [
-          {
-            "amount": "2281",
-            "denom": "uosmo"
-          }
-        ]
-      }
-*/
-      /*const msgs = [swapExactAmountIn({
-        "sender": "osmo1l4c0w4mmz45d9ekhv35xqtcceek6zcg2j36d9m",
-        "routes": [
-          {
-            "poolId": BigInt(1573),
-            "tokenOutDenom": "ibc/C12C353A83CD1005FC38943410B894DBEC5F2ABC97FC12908F0FB03B970E8E1B"
-          }
-        ],
-        tokenIn: coin(617637405,"ibc/C360EF34A86D334F625E4CBB7DA3223AEA97174B61F35BB3758081A8160F7D9B"),
-        tokenOutMinAmount: "1"
-      })]
-
-      const fee = {
-        "gas": "760266",
-        "amount": [
-          {
-            "amount": "2281",
-            "denom": "uosmo"
-          }
-        ]
-      }
-      const resp = await client.signAndBroadcast(accounts[0].address, msgs, fee)
-      console.log(resp)
-      */
       let fileio = await FileIo.trackIo(wallet);
       setWallet(wallet);
       setFileIO(fileio);
 
       setLogin(true);
-      //var fileIo = await jackal_js_1.FileIo.trackIo(wallet);
-      //var f = new File([process.env.PASSWORD], "password.txt");
-      //var handler = await jackal_js_1.FileUploadHandler.trackFile(f, "s/data");
-      //var readyFile = handler.getForUpload();
-
-/*
-      let d = []
-
-      let x = 0
-      for (const key of Object.keys(files)) {
-        const f = files[key]
-
-        const fDetails = await getFileTreeData("s/Home/" + f.name, wallet.getJackalAddress(), wallet.getQueryHandler())
-        console.log(fDetails)
-        const dFiles = fDetails.value.files
-        if (dFiles == null) {
-          continue
-        }
-        const fidList = JSON.parse(dFiles.contents)
-        const newFid = fidList.fids[0]
-
-        d[x] = { name: key, fid: newFid }
-        x++
-      }
-      console.log(d)
-      */
     }
     fn()
   }, [])
@@ -200,7 +105,7 @@ function Oculux() {
   } 
 
   return (
-    <>
+    <main className='hfl'>
       <section className='lpanel'>
         <div id='header-page' className='header'>
           <img src={logo} />
@@ -219,7 +124,7 @@ function Oculux() {
         <MediaPlayer video={video}></MediaPlayer>
         <Details video={video?.metadata || null}></Details>
       </section>
-    </>
+    </main>
   )
 }
 

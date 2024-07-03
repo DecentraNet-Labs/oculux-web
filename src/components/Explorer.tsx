@@ -1,229 +1,211 @@
-import { useEffect, useState } from 'react'
-import ico_download from '../assets/icon-download.svg'
-import ico_delete from '../assets/icon-delete.svg'
-import ico_video from '../assets/icon-video.svg'
+import { useEffect, useRef, useState } from 'react';
+
+import { resolve_fileIcon, resolve_fileSecurity, resolve_fileSize, saveFile } from '../utils';
+
+import '../styles/Explorer.css'
 import ico_dir from '../assets/icon-directory.svg'
-import ico_back from '../assets/icon-arrowBack.svg'
+import { loadUser } from '../UserContext';
 
-import { FileIo, IFolderFileFrame, IFolderChildFiles } from 'jackal.js-plus'
-import Upload from './Upload'
-import { resolve_videoSize } from '../utils'
-
-const ROOT_DEFAULT = "s/Home"
-
-interface IPropsExplorer {
-  user: string
-  FileIO: FileIo
-  videoSelectHook: (path: string, owner: string, meta: any) => void
-}
+import List from './List';
 
 interface IStorageItems {
   directories: string[]
-  files: IFolderChildFiles
+  files: any
 }
 
-function Explorer({ user, FileIO, videoSelectHook}: IPropsExplorer) {
+interface IPropsExplorer {
+  items: IStorageItems | null
+  dir: string
+  refresh: () => void
+  addToPath: (dir: string) => void
+}
 
-  const [root, setRoot] = useState("")
-  const [dir, setDir] = useState("")
-  const [addr, setAddress] = useState("")
-  const [items, setItems] = useState<IStorageItems>({directories: [], files: {}})
+function Explorer({ items, dir, refresh, addToPath }: IPropsExplorer) {
+  const [focus, setFocus] = useState<IStorageItem | null>(null)
+  const [pending, setPending] = useState<boolean>(false)
+  const [fileActions, setActions] = useState<any>({})
+  
+  const headerWrapperRef = useRef<HTMLDivElement>(null);
+  const scrollableContentWrapperRef = useRef<HTMLDivElement>(null);
 
-  const [uploadToggle, setUpload] = useState(false)
-  const [pending, setPending] = useState(false)
-
-  useEffect(() => {
-    if (!addr)
-      setAddress(user)
-  }, [user])
-
-  useEffect(() => {
-    if (FileIO)
-      setDir("s/Home")
-  }, [FileIO])
+  const user = loadUser();
 
   useEffect(() => {
-    console.debug("[EXPLORER] New Directory Path: ", dir)
-    async function fn() {
-      if (FileIO) {
-        const listFiles: IFolderFileFrame = await FileIO.downloadFolder(dir)
+    const headerWrapper = headerWrapperRef.current;
+    const scrollableContentWrapper = scrollableContentWrapperRef.current;
 
-        const directories = listFiles.getFolderDetails().dirChildren
-        const files: IFolderChildFiles = listFiles.getFolderDetails().fileChildren
-
-        setItems({directories, files})
-      } else {
-
+    const syncScroll = () => {
+      if (headerWrapper && scrollableContentWrapper) {
+        headerWrapper.scrollLeft = scrollableContentWrapper.scrollLeft;
       }
+    };
+
+    scrollableContentWrapper?.addEventListener('scroll', syncScroll);
+
+    return () => {
+      scrollableContentWrapper?.removeEventListener('scroll', syncScroll);
+    };
+  }, [items])
+
+  useEffect(() => {
+    if (!pending) {
+      setFocus(null)
     }
-    fn()
-  }, [dir, uploadToggle, pending])
+  }, [user.FileIO.readActivePath(), pending])
 
-  const saveFile = (file: File) => {
-    // Step 2: Convert File to Blob
-    const blob = new Blob([file], { type: file.type });
+  useEffect(() => {
+    // Function to handle key press events
+    function handleKeyPress(event: any) {
+        if (focus && event.key === 'Escape') {
 
-    // Step 3: Create a download link
-    const downloadLink = document.createElement('a');
-    downloadLink.href = URL.createObjectURL(blob);
-    downloadLink.download = file.name;
+          setFocus(null)
+        }
+    }
 
-    // Step 4: Trigger the download
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
+    document.addEventListener('keydown', handleKeyPress);
 
-    // Cleanup
-    document.body.removeChild(downloadLink);
-  };
-
+    // Clean up the event listener
+    return () => {
+        document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, []);
 
   const downloadFile = async (filename: string) => {
+    if (!user.FileIO) return;
     const downloadDetails = {
       rawPath: dir + "/" + filename, // manual complete file path OR pathOfFirstChild
-      owner: addr, // JKL address of file owner
+      owner: user.addr, // JKL address of file owner
       isFolder: false
     }
     console.log(downloadDetails.owner)
+    setActions((d: any) => ({...d, [downloadDetails.rawPath]: "DOWNLOAD"}))
     
-    const fileHanlder = await FileIO.downloadFile(downloadDetails, { track: 0 })
-    
-    const file = fileHanlder.getFile()
-    saveFile(file)
+    try {
+      const tracker = { progress: 0, chunks: []}
+      const file = await user.FileIO.downloadFile(user.FileIO.readActivePath() + '/' + filename, tracker)
+      saveFile(file)
+    } catch {
+      user.addMessage({type: "ERROR", text: "Unable to download file.", timeout: 5000})
+    }
+    setActions((d: any) => {
+      const x = {...d}
+      delete x[downloadDetails.rawPath]
+      return x
+    })
   }
 
   const deleteFile = async (filename: string) => {
+    console.log("[J-Suite] Deleting File:", filename)
+    if (!user.FileIO) return;
+    setActions((d: any) => ({...d, [dir + "/" + filename]: "DELETE"}))
     setPending(true)
-    const parent = await FileIO.downloadFolder(dir)
-    
-    await FileIO.deleteTargets([filename], parent)
+    try {
+      await user.FileIO.deleteTargets(filename)
+    } catch {
+      user.addMessage({type: "ERROR", text: "Failed to delete file.", timeout: 5000})
+    }
+    setActions((d: any) => {
+      const x = {...d}
+      delete x[dir + "/" + filename]
+      return x
+    })
     setPending(false)
+    refresh()
+  }
+
+  const editFileMeta = async (filename: string, newTitle: string) => {
+    if (filename == newTitle || !items || !user.FileIO) return true
+    if (newTitle in items?.files) return 1
+    
+    //const readyToBroadcast = [parent.addChildDirs([newTitle]), parent.removeChildDirReferences([filename], user.wallet)]
   }
 
   function renderItems() {
+    console.debug("[DEBUG] Rendering Items:", user.FileIO.listChildFiles())
     let elements = []
-    for (const item of items.directories) {
+    for (const item of user.FileIO.listChildFolders()) {
       elements.push(
-        <div className='wrapper-row' onClick={() => setDir(dir + "/" + item)}>
-          <div className='row'>
-            <div className='column xsmall actions'><img className="icon" src={ico_dir} /></div>
-            <div className='column xlarge'>{item}</div>
-            <div className='column large'></div>
-            <div className='column'></div>
-            <div className='column small actions right'>
-              <img className="icon" src={ico_delete} />
+        <div className={'row' + (item === focus?.name ? ' focus' : '')} onClick={() => addToPath(item)}>
+          <div className='select'></div>
+          <div className='content'>
+            <div className='column notext xsm'>
+              <img className='icon' src={ico_dir}></img>
             </div>
+            <div className='column xlg'>{item}</div>
+            <div className='column md'></div>
+            <div className='column sm'></div>
+            <div className='column md'></div>
+            <div className='column sm'></div>
           </div>
         </div>
       )
     }
-    for (const [fid, item] of Object.entries<any>(items.files)) {
-      console.log(fid, item)
+    
+    for (const [fid, item] of Object.entries<any>(user.FileIO.listChildFileMeta())) {
+      //console.log(fid, item)
+      let formattedDate = "Unknown"
       let date = new Date(item.lastModified)
-      const yyyy = date.getFullYear();
-      let mm: string | number = date.getMonth() + 1; // Months start at 0!
-      let dd: string | number = date.getDate();
 
-      if (dd < 10) dd = '0' + dd;
-      if (mm < 10) mm = '0' + mm;
-      const formattedDate = dd + '/' + mm + '/' + yyyy;
+      if (!isNaN(date.getTime())) {
+        const yyyy = date.getFullYear();
+        let mm: string | number = date.getMonth() + 1; // Months start at 0!
+        let dd: string | number = date.getDate();
+  
+        if (dd < 10) dd = '0' + dd;
+        if (mm < 10) mm = '0' + mm;
+        formattedDate = dd + '/' + mm + '/' + yyyy;
+      }
+
       elements.push(
-        <div className='wrapper-row' onClick={() => videoSelectHook(dir + '/' + item.name, addr, item)}>
-          <div className='row'>
-            <div className='column xsmall actions'><img className="icon" src={ico_video} /></div>
-            <div className='column xlarge'>{item.name}</div>
-            <div className='column large'>{formattedDate}</div>
-            <div className='column'>{resolve_videoSize(item.size)}</div>
-            <div className='column'>{item.author}</div>
-            <div className='column small actions right'>
-              <img className="icon" src={ico_download} onClick={() => downloadFile(item.name)}/>
-              <img className="icon" src={ico_delete} onClick={() => deleteFile(item.name)} />
+        <div className={'row' + (item.name === focus?.name ? ' focus' : '')}>
+          <div className='select'></div>
+          <div className='content' onClick={() => setFocus({name: item.name, size: item.size, type: item.type, date: formattedDate } as IStorageItem)}>
+            <div className='column notext xsm'>
+              <img className='icon' src={resolve_fileIcon(item.type)}></img>
             </div>
+            <div className='column xlg'>{item.name}</div>
+            <div className='column md'>{formattedDate}</div>
+            <div className='column sm'>{resolve_fileSize(item.size)}</div>
+            <div className='column md'>{resolve_fileSecurity(item.security)}</div>
+            <div className='column sm'></div>
           </div>
         </div>
       )
+    }
+
+    if (!elements.length) {
+      return (
+        <div className='folderMessage'>
+          This Folder is Empty
+        </div>
+      );
     }
     return elements
   }
 
-  return (
-    <div id='explorer' className={'explorer container list' + (uploadToggle ? ' uploading' : '')}>
-      <div className='nav'>
-        <div className='path'>
-          {uploadToggle ? 
-          <img className='icon large action' src={ico_dir} />
-          : 
-          <img className='icon large action' src={ico_back} onClick={() => setDir(dir.substring(0, dir.lastIndexOf('/')))} />}
-          <input className='pathInput' type='text' value={dir.replaceAll("/", " / ")} />
-        </div>
-        {!uploadToggle ? 
-        <button className='upload' onClick={() => setUpload(true)}>
-        UPLOAD
-        </button>
-        : null}
+  function renderLoader() {
+    return (
+      <div id="list-source-loading">
+        <svg className="loader" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="52" height="52" fill="#bb9219">
+            <path transform="translate(0 0)" d="M0 12 V20 H4 V12z">
+                <animateTransform attributeName="transform" type="translate" values="0 0; 28 0; 0 0; 0 0" dur="1.5s" begin="0" repeatCount="indefinite" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" calcMode="spline" />
+            </path>
+            <path opacity="0.5" transform="translate(0 0)" d="M0 12 V20 H4 V12z">
+                <animateTransform attributeName="transform" type="translate" values="0 0; 28 0; 0 0; 0 0" dur="1.5s" begin="0.1s" repeatCount="indefinite" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" calcMode="spline" />
+            </path>
+            <path opacity="0.25" transform="translate(0 0)" d="M0 12 V20 H4 V12z">
+                <animateTransform attributeName="transform" type="translate" values="0 0; 28 0; 0 0; 0 0" dur="1.5s" begin="0.2s" repeatCount="indefinite" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" calcMode="spline" />
+            </path>
+        </svg>
       </div>
-      {uploadToggle ? 
-        <Upload toggle={setUpload} FileIO={FileIO} dir={dir} /> 
-        : 
-        <>
-          <div className='filelist'>
-            <div className='wrapper-row'>
-              <div className='header'>
-                <div className='column xsmall'></div>
-                <div className='column xlarge'>TITLE</div>
-                <div className='column large'>DATE UPLOADED</div>
-                <div className='column'>SIZE</div>
-                <div className='column'>AUTHOR</div>
-                <div className='column small'></div>
-              </div>
-            </div>
-            <div className='items'>
-              {renderItems()}
-            </div>
-          </div>
-        </>
-      }
-    </div>
+    )
+  }
+
+  return (
+    <section className='explorer'>
+      <List />
+    </section>
   )
 }
 
 export default Explorer
-
-/*
-<div className='path'>
-        <img className='icon large action' src={ico_back} />
-        <input className='pathInput' type='text' placeholder={"JKL://oculux/videos/"} />
-      </div>
-      <div className='header'>
-        <div className='column xsmall'></div>
-        <div className='column large'>TITLE</div>
-        <div className='column large'>DESCRIPTION</div>
-        <div className='column right'>UPLOADED</div>
-        <div className='column small'></div>
-      </div>
-      <div className='items'>
-        <div className='wrapper-row'>
-          <div className='row'>
-            <div className='column xsmall actions'><img className="icon" src={ico_video} /></div>
-            <div className='column large'>My First Video</div>
-            <div className='column large'>The first video upload via Oculux!</div>
-            <div className='column right'>12/25/2023</div>
-            <div className='column small actions'>
-              <img className="icon" src={ico_download} />
-              <img className="icon" src={ico_delete} />
-            </div>
-          </div>
-        </div>
-        <div className='wrapper-row'>
-          <div className='row'>
-            <div className='column xsmall actions'><img className="icon" src={ico_video} /></div>
-            <div className='column large'>My Second Videooooooooo</div>
-            <div className='column large'>testing overlow</div>
-            <div className='column right'>12/26/2023</div>
-            <div className='column small actions'>
-              <img className="icon" src={ico_download} />
-              <img className="icon" src={ico_delete} />
-            </div>
-          </div>
-        </div>
-      </div>
-*/
