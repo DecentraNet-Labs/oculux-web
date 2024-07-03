@@ -15,7 +15,7 @@ export const resolve_videoType = (t: string) => {
   }
 }
 
-export const resolve_videoSize = (bytes: number) => {
+export const resolve_fileSize = (bytes: number) => {
   if (bytes === 0) return '0 Bytes';
 
   const k = 1024;
@@ -23,6 +23,31 @@ export const resolve_videoSize = (bytes: number) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+export const resolve_date = (dt: string | any) => {
+  let formattedDate = "Unknown"
+  let date = new Date(dt)
+
+  if (!isNaN(date.getTime())) {
+    const yyyy = date.getFullYear();
+    let mm: string | number = date.getMonth() + 1; // Months start at 0!
+    let dd: string | number = date.getDate();
+
+    if (dd < 10) dd = '0' + dd;
+    if (mm < 10) mm = '0' + mm;
+    formattedDate = dd + '/' + mm + '/' + yyyy;
+  }
+  return formattedDate;
+}
+
+export const resolve_fileSecurity = (security: number) => {
+  switch (security) {
+    case 0: return "Public"
+    case 1: return "Private"
+    case 2: return "Protected"
+    case 3: return "Protected+"
+  }
 }
 
 export async function getVideoFileMetadata(file: File): Promise<IVideoFileMetadata> {
