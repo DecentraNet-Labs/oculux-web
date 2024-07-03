@@ -116,15 +116,47 @@ section .container {
 
 .container#explorer {
   height: calc(100% - 324px);
-  display: grid;
-  grid-template-rows: 40px 30px 1fr;
+  display: flex;
+  flex-direction: column;
 }
 
-.explorer > .path {
+.container#explorer.uploading {
+  grid-template-rows: 40px 1fr;
+}
+
+.explorer > .nav {
+  display: flex;
+  justify-content: space-between;
+}
+
+.explorer > .nav > .path {
   padding: 8px 20px;
   display: flex;
   align-items: center;
   gap: 14px;
+}
+
+.explorer > .nav > .upload {
+  width: 100px;
+  height: 28px;
+  border: 1px solid #a5eba5;
+  border-radius: 5px;
+  font-weight: bold;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 4px;
+  font-size: 13px;
+  color: #7ec77e;
+  outline: 0;
+}
+
+
+
+button.red {
+  border-color: #e05959 !important;
+}
+
+button.green {
+  border-color: #5fcc5f !important;
 }
 
 .pinned .title {
@@ -138,4 +170,14 @@ section .container {
   border: 0;
   outline: 0;
   color: inherit;
+}
+
+.textbutton {
+  font-size: 0.8em;
+  cursor: pointer;
+  color: #aaabda;
+}
+
+input, textarea {
+  outline: none;
 }
