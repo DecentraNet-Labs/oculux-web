@@ -1,19 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import logo from './assets/logo_white.png'
 import './main.css'
 import './styles/list.css'
 import MediaPlayer from './components/MediaPlayer'
-import Details from './components/Details'
+//import Details from './components/Details'
 import Explorer from './components/Explorer'
 
-import {
-  Files
-} from '@jackallabs/jackal.js-protos'
+import { AppProvider, loadContext } from './AppContext'
 
-import { WalletHandler, StorageHandler, IFiletreeParsedContents, FileIo, getFileTreeData } from 'jackal.js-plus'
-import IFileDetails from './interfaces/IFileDetails'
-import IVideoMetadata from './interfaces/IVideoMetadata'
-
+/*
 const walletConfig = {
   chainConfig: {
     chainId: 'jackal-1',
@@ -64,45 +59,16 @@ const walletConfig = {
   txAddr: 'https://rpc.jackalprotocol.com',
   selectedWallet: "keplr",
 }
+*/
 
 function Oculux() {
-  const [count, setCount] = useState(0)
-  const [video, setVideo] = useState<IFileDetails | null>(null)
-  
-  const [Wallet, setWallet] = useState<WalletHandler>()
-  const [FileIO, setFileIO] = useState()
-  const [connected, setLogin] = useState(false)
+  const app = loadContext();
 
   useEffect(() => {
-    async function fn() {
-      console.log("init")
-      let wallet = await WalletHandler.trackWallet(walletConfig);
-      let fileio = await FileIo.trackIo(wallet);
-      setWallet(wallet);
-      setFileIO(fileio);
-
-      setLogin(true);
-    }
-    fn()
+    console.log("init")
+    if (!app.client)
+      app.signIn('keplr')
   }, [])
-
-  async function loadVideo(path: string, owner: string, details: IVideoMetadata) {
-    console.log(path, owner)
-    const { success, value: { files } } = await getFileTreeData(path, owner, Wallet.getQueryHandler())
-    if (!success) throw new Error(`[ERROR] File "${details.name}" not found! `)
-    const { contents, editAccess, viewingAccess, trackingNumber } = files as Files
-    let parsedContents: IFiletreeParsedContents
-    try {
-      parsedContents = JSON.parse(contents)
-      console.log(contents)
-    } catch (err) {
-      console.error(err)
-      parsedContents = { fids: [], security: 1 }
-    }
-    const fid = parsedContents.fids[0]
-    const security = parsedContents.security
-    setVideo({fid, security, metadata: details} as IFileDetails)
-  } 
 
   return (
     <main className='hfl'>
@@ -118,14 +84,15 @@ function Oculux() {
             </div>
           </div>
         </div>
-        {connected && Wallet ? <Explorer user={Wallet.getJackalAddress()} FileIO={FileIO} videoSelectHook={loadVideo} /> : <></>}
+        <Explorer />
       </section>
       <section className='rpanel'>
-        <MediaPlayer video={video}></MediaPlayer>
-        <Details video={video?.metadata || null}></Details>
+        <MediaPlayer video={null}></MediaPlayer>
+        
       </section>
     </main>
   )
 }
 
 export default Oculux
+//<Details video={video?.metadata || null}></Details>

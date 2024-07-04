@@ -1,6 +1,8 @@
-import { ClientHandler, StorageHandler } from "@jackallabs/jackal.js";
+import { IClientHandler, IStorageHandler } from "@jackallabs/jackal.js";
 
 export default interface AppContext {
-  client: ClientHandler
-  storage: StorageHandler
+  client: IClientHandler | null
+  storage: IStorageHandler | null
+  signIn: (type: string) => void
+  signOut: (swap?: string) => void
 }

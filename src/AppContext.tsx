@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { IClientHandler, ClientHandler, IStorageHandler, StorageHandler } from '@jackallabs/jackal.js';
 import IAppContext from './interfaces/IAppContext';
-import AppContext from './interfaces/IAppContext';
 //import AppMsg from './interfaces/IAppMsg';
 //import UploadHandler from './handlers/UploadHandler';
 
@@ -10,8 +9,8 @@ const AppContext = createContext<IAppContext | undefined>(undefined);
 
 // A component to provide the context values
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [clientHandler, setClientHandler] = useState<IClientHandler>();
-  const [storageHandler, setStorageHandler] = useState<IStorageHandler>();
+  const [clientHandler, setClientHandler] = useState<IClientHandler | null>(null);
+  const [storageHandler, setStorageHandler] = useState<IStorageHandler | null>(null);
 
   //const [msgs, setMsgs] = useState<AppMsg[]>([]);
   //const [uploadHandler, setUploadHandler] = useState<UploadHandler>(new UploadHandler())
@@ -19,9 +18,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   async function signIn(type: string) {
     //walletConfig.selectedWallet = type
     try {
+      console.log("Signing In...")
       // [TODO]: wallet app selection
       const client = await ClientHandler.connect();
-      const storage = await StorageHandler.init(client);
+      const storage = await client.createStorageHandler()
+      console.log("Finished waiting for storage handler init.")
+      //await storage.buyMyStoragePlan(2)
+      if (storage.readChildCount() < 0 && storage.readActivePath() == "s/Home") {
+        await storage.initStorage()
+        await storage.buyMyStoragePlan(2)
+      }
       //uploadHandler.init(fileIO, addMessage)
       setClientHandler(client)
       setStorageHandler(storage)
@@ -32,7 +38,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   async function signOut(swap?: string) {
       //if (swap && swap != walletConfig.selectedWallet) return;
-      setClientHandler(undefined)
+      setClientHandler(null)
       if (swap) {
         //await signIn(walletConfig.selectedWallet)
       } else {
@@ -45,15 +51,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.log(msg)
       setMsgs(prev => [...prev, msg])
   }*/
-
   return (
       <AppContext.Provider value={{
-      client: clientHandler,
-      storage: storageHandler,
-      //Upload: uploadHandler,
-      //messages: msgs,
-      //addMessage: addMessage, 
-      signIn: signIn, signOut: signOut,
+        client: clientHandler,
+        storage: storageHandler,
+        //Upload: uploadHandler,
+        //messages: msgs,
+        //addMessage: addMessage, 
+        signIn: signIn, 
+        signOut: signOut,
       }}>
       {children}
       </AppContext.Provider>

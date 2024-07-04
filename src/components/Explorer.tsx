@@ -1,48 +1,37 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { 
   //resolve_fileIcon,
-  resolve_fileSecurity, 
+  //resolve_fileSecurity, 
   resolve_fileSize, 
   resolve_date 
 } from '../utils';
 
 import '../styles/Explorer.css'
-import ico_dir from '../assets/icon-directory.svg'
+//import ico_dir from '../assets/icon-directory.svg'
 import { loadContext } from '../AppContext';
 
 import List, { IListRow, ListStatus } from './List';
-import { IChildMetaDataMap, StorageHandler } from '@jackallabs/jackal.js';
 import IAppContext from '../interfaces/IAppContext';
 
-interface IStorageItems {
-  directories: string[]
-  files: any
-}
-
 interface IPropsExplorer {
-  dir: string
 }
 
 const ListColumns = [
   {name: 'Title', size: 'xlg'},
   {name: 'Size', size: 'sm'},
-  //{name: 'Security', size: 'sm'},
+  {name: 'Security', size: 'sm'},
   {name: 'Modified', size: 'md'}
   // [TODO]: Actions
 ]
 
-function Explorer({ dir }: IPropsExplorer) {
+function Explorer({  }: IPropsExplorer) {
   //const [focus, setFocus] = useState<IStorageItem | null>(null)
 
   const [renderData, setRenderData] = useState<IListRow[]>([]);
   const [pending, setPending] = useState<boolean>(false)
 
-  // path in context
   // primary focus in context
-
-  const headerWrapperRef = useRef<HTMLDivElement>(null);
-  const scrollableContentWrapperRef = useRef<HTMLDivElement>(null);
 
   const app: IAppContext = loadContext();
 
@@ -66,54 +55,23 @@ function Explorer({ dir }: IPropsExplorer) {
     };
   }, []);
 
-  const downloadFile = async (filename: string) => {
-    if (!user.FileIO) return;
-    const downloadDetails = {
-      rawPath: dir + "/" + filename, // manual complete file path OR pathOfFirstChild
-      owner: user.addr, // JKL address of file owner
-      isFolder: false
-    }
-    console.log(downloadDetails.owner)
-    
-    try {
-      const tracker = { progress: 0, chunks: []}
-      const file = await user.FileIO.downloadFile(user.FileIO.readActivePath() + '/' + filename, tracker)
-      saveFile(file)
-    } catch {
-      user.addMessage({type: "ERROR", text: "Unable to download file.", timeout: 5000})
-    }
-  }
-
-  const deleteFile = async (filename: string) => {
-    console.log("[J-Suite] Deleting File:", filename)
-    if (!user.FileIO) return;
-    // setActions((d: any) => ({...d, [dir + "/" + filename]: "DELETE"}))
-    setPending(true)
-    try {
-      await user.FileIO.deleteTargets(filename)
-    } catch {
-      user.addMessage({type: "ERROR", text: "Failed to delete file.", timeout: 5000})
-    }
-    // setActions((d: any) => {
-    //   const x = {...d}
-    //   delete x[dir + "/" + filename]
-    //   return x
-    // })
-    setPending(false)
+  useEffect(() => {
+    console.log("refreshing list")
     refresh()
-  }
+    // [TODO]: Test - does this work??
+  }, [app.storage?.readActivePath()])
 
   function processFolders() {
     const processed: IListRow[] = []
     // [TODO]: expose `children` using a getter
-    for (const folder of Object.values(app.storage.children.folders)) {
+    for (const folder of Object.values(app.storage?.children.folders || [])) {
       processed.push({
         //click: changeDirectory
         data: [
           folder.whoAmI,
           folder.count + " Items",
           null,
-          null,
+          null
           // [TODO]: Actions
         ],  // Name, file count, blanks, actions
         focused: false
@@ -126,7 +84,7 @@ function Explorer({ dir }: IPropsExplorer) {
 
   function processFiles() {
     const processed: IListRow[] = []
-    for (const file of Object.values(app.storage.children.files)) {
+    for (const file of Object.values(app.storage?.children.files || [])) {
       processed.push({
         //click: selectFile
         data: [
@@ -147,9 +105,12 @@ function Explorer({ dir }: IPropsExplorer) {
   async function refresh() {
     // get new set of files, make sure it changed
     // [TODO]: Expose `refreshActiveFolder`  (protected by default)
-    app.storage.refreshActiveFolder()
+    if (!app.storage) return
+    setPending(true)
+    await app.storage.refreshActiveFolder()
     processFolders()
     processFiles()
+    setPending(false)
   }
 
   return (

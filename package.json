@@ -16,7 +16,7 @@
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.1",
     "@types/video.js": "^7.3.58",
-    "@jackallabs/jackal.js": "^3.0.0-rc.3",
+    "@jackallabs/jackal.js": "file:jackallabs-jackal.js-3.0.0-rc.3.tgz",
     "osmojs": "^16.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -25,6 +25,7 @@
   "devDependencies": {
     "@keplr-wallet/types": "^0.11.3",
     "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "eslint": "^8.55.0",
     "eslint-plugin-react-hooks": "^4.6.0",
