@@ -13,6 +13,7 @@ section.details > .thumbnail {
   position: relative;
   border: 1px solid #353535;
   border-radius: 2.5px;
+  flex-shrink: 0;
 
   & > .foreground {
     position: absolute;
@@ -37,8 +38,11 @@ section.details > .thumbnail {
 }
 
 section.details > .metadata {
-  padding: 20px 5px;
+  margin: 20px 0;
+  padding-left: 5px;
+  padding-right: 10px;
   flex-grow: 1;
+  overflow: auto;
 
   & > .title {
     font-size: 18px;
@@ -60,9 +64,7 @@ section.details > .metadata {
     font-weight: 700;
   }
 
-  & .detail > .value.lg {
-    height: 128px;
-    overflow: auto;
+  & .detail > .value {
   }
 }
 
