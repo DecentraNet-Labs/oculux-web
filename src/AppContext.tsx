@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { IClientHandler, ClientHandler, IStorageHandler, StorageHandler } from '@jackallabs/jackal.js';
+import { IClientHandler, ClientHandler, IStorageHandler, IBaseMetaData } from '@jackallabs/jackal.js';
 import IAppContext from './interfaces/IAppContext';
 //import AppMsg from './interfaces/IAppMsg';
 //import UploadHandler from './handlers/UploadHandler';
@@ -11,6 +11,8 @@ const AppContext = createContext<IAppContext | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [clientHandler, setClientHandler] = useState<IClientHandler | null>(null);
   const [storageHandler, setStorageHandler] = useState<IStorageHandler | null>(null);
+  const [selectedItem, setSelected] = useState<IBaseMetaData | null>(null);
+  const [activeModal, setModal] = useState<string>('');
 
   //const [msgs, setMsgs] = useState<AppMsg[]>([]);
   //const [uploadHandler, setUploadHandler] = useState<UploadHandler>(new UploadHandler())
@@ -24,9 +26,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const storage = await client.createStorageHandler()
       console.log("Finished waiting for storage handler init.")
       //await storage.buyMyStoragePlan(2)
+      console.log("Active Path:", storage.readActivePath())
+      console.log("Child Count:", storage.readChildCount())
       if (storage.readChildCount() < 0 && storage.readActivePath() == "s/Home") {
         await storage.initStorage()
-        await storage.buyMyStoragePlan(2)
+        //await storage.buyMyStoragePlan(2)
       }
       //uploadHandler.init(fileIO, addMessage)
       setClientHandler(client)
@@ -46,6 +50,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
   }
 
+  async function setDir(path: string) {
+    if (storageHandler)
+      await storageHandler?.changeActiveDirectory(path)
+  }
+
   /*function addMessage(msg: AppMsg) {
       console.warn("adding message")
       console.log(msg)
@@ -55,9 +64,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       <AppContext.Provider value={{
         client: clientHandler,
         storage: storageHandler,
+        dir: storageHandler?.readActivePath() || '',
+        selected: selectedItem,
+        modal: activeModal,
         //Upload: uploadHandler,
         //messages: msgs,
-        //addMessage: addMessage, 
+        //addMessage: addMessage,
+        select: setSelected,
         signIn: signIn, 
         signOut: signOut,
       }}>

@@ -48,7 +48,14 @@ export default function List({ columns, data, select }: IPropsList) {
 
   function renderHeader() {
     const elements = []
-    if (select) elements.push(<div className='select'></div>)
+    if (select) elements.push(
+      <div className='select'>
+        <label className="container">
+          <input type="checkbox" />
+          <span className="checkmark"></span>
+        </label>
+      </div>
+    )
     for (const col of columns) {
       elements.push(
         <div key={col.name} className={'column ' + col.size}>{col.name}</div>
@@ -61,7 +68,14 @@ export default function List({ columns, data, select }: IPropsList) {
     const rows: JSX.Element[] = []
     for (const row of data) {
       const elements: JSX.Element[] = []
-      if (select) elements.push(<div className='select'></div>)
+      if (select) elements.push(
+        <div className='select'>
+          <label className="container">
+            <input type="checkbox" />
+            <span className="checkmark"></span>
+          </label>
+        </div>
+      )
       for (let i = 0; i < row.data.length; i++) {
         elements.push(
           <div key={columns[i].name + '-' + i} className={'column ' + (columns[i].size || '')}>{row.data[i]}</div>

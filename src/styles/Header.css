@@ -1,0 +1,12 @@
+
+section.header {
+  justify-content: space-between;
+  height: 64px;
+  margin: 4vh 4vw;
+}
+
+section.header img {
+  height: 38px;
+  cursor: pointer;
+  opacity: 0.85;
+}

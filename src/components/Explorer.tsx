@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { 
   //resolve_fileIcon,
@@ -8,7 +8,8 @@ import {
 } from '../utils';
 
 import '../styles/Explorer.css'
-//import ico_dir from '../assets/icon-directory.svg'
+import ico_dir from '../assets/icon-directory.svg'
+
 import { loadContext } from '../AppContext';
 
 import List, { IListRow, ListStatus } from './List';
@@ -18,10 +19,10 @@ interface IPropsExplorer {
 }
 
 const ListColumns = [
-  {name: 'Title', size: 'xlg'},
-  {name: 'Size', size: 'sm'},
-  {name: 'Security', size: 'sm'},
-  {name: 'Modified', size: 'md'}
+  {name: 'TITLE', size: 'xlg'},
+  {name: 'SIZE', size: 'sm'},
+  {name: 'SECURITY', size: 'sm'},
+  {name: 'MODIFIED', size: 'md'}
   // [TODO]: Actions
 ]
 
@@ -29,16 +30,16 @@ function Explorer({  }: IPropsExplorer) {
   //const [focus, setFocus] = useState<IStorageItem | null>(null)
 
   const [renderData, setRenderData] = useState<IListRow[]>([]);
+
+  const [uploadToggle, setUpload] = useState(false)
+  const [newDirToggle, setNewDir] = useState(false)
   const [pending, setPending] = useState<boolean>(false)
 
-  // primary focus in context
-
   const app: IAppContext = loadContext();
+  const pathRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!pending) {
-      refresh()
-    }
+
   }, [,pending])
 
   useEffect(() => {
@@ -56,6 +57,7 @@ function Explorer({  }: IPropsExplorer) {
   }, []);
 
   useEffect(() => {
+    console.log(app.dir)
     console.log("refreshing list")
     refresh()
     // [TODO]: Test - does this work??
@@ -77,16 +79,14 @@ function Explorer({  }: IPropsExplorer) {
         focused: false
       })
     }
-    setRenderData((prevItems) => {
-      return [ ...(prevItems || []), ...processed ];
-    });
+    return processed
   }
 
   function processFiles() {
     const processed: IListRow[] = []
     for (const file of Object.values(app.storage?.children.files || [])) {
       processed.push({
-        //click: selectFile
+        click: () => app.select(file),
         data: [
           file.fileMeta.name, 
           resolve_fileSize(file.fileMeta.size), 
@@ -97,24 +97,59 @@ function Explorer({  }: IPropsExplorer) {
         focused: false
       })
     }
-    setRenderData((prevItems) => {
-      return [ ...(prevItems || []), ...processed ];
-    });
+    return processed
   }
 
-  async function refresh() {
+  function renderPath() {
+    const subdirs = app.dir.slice(2).split('/')
+    //console.log(subdirs)
+    let elements = [<div onClick={() => {!uploadToggle ? refresh('s/' + subdirs.slice(0,1).join('/')) : null}} className='subdir'>{subdirs[0]}</div>]
+    // var vs. let over here:
+    for (let i = 1; i < subdirs.length; i++)
+      elements.push(<><div className='seperator'>{'❯'}</div><div onClick={() => {!uploadToggle ? refresh('s/' + subdirs.slice(0,i+1).join('/')) : null}} className='subdir'>{subdirs[i]}</div></>)
+    return elements
+  }
+
+  async function refresh(path?: string) {
     // get new set of files, make sure it changed
     // [TODO]: Expose `refreshActiveFolder`  (protected by default)
     if (!app.storage) return
     setPending(true)
-    await app.storage.refreshActiveFolder()
-    processFolders()
-    processFiles()
+    setRenderData([])
+    if (path && path != app.storage.readActivePath()) {
+      await app.storage?.changeActiveDirectory(path)
+    } else {
+      await app.storage.refreshActiveFolder()
+    }
+    const folders = processFolders()
+    const files = processFiles()
+    setRenderData([...folders, ...files])
+    // [TODO]: set selected to current folder
     setPending(false)
   }
 
   return (
     <section className='explorer'>
+      <div className='header hfl'>
+        <div className='path'>
+          <img className='icon' src={ico_dir}></img>
+            <div className='path inner hfl' ref={pathRef}>
+              {renderPath()}
+            </div>
+        </div>
+        <div className='actions'>
+          {!uploadToggle ? 
+          <>
+            <button className='upload' onClick={() => app.storage ? setNewDir(true) : null}>
+            ➕ NEW FOLDER
+            </button>
+            <button className='upload' onClick={() => app.storage ? setUpload(true) : null}>
+            ➕ UPLOAD
+            </button>
+          </>
+          : null}
+        </div>
+      </div>
       <List columns={ListColumns} data={renderData} select={true} status={ListStatus.ACTIVE} />
     </section>
   )

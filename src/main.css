@@ -13,36 +13,90 @@ html, body {
 }
 /*#020322; #080933; #141733;*/
 
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 12px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #383838; 
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #5e5e5e; 
+}
+
 main {
-  width: 100%;
-  height: 100%;
-  display: flex;
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-areas:
+  'header video'
+  'explorer video';
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr;
   flex-direction: row;
 }
 
 section {
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
 section > * {
   width: 100%;
 }
 
-.lpanel {
-  width: 40%;
-  padding: 24px 36px;
+.hfl {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
-.rpanel {
-  width: 60%;
-  background-color: #03020f;
-  padding: 24px 60px;
+.vfl {
+  display: flex;
+  flex-direction: column;
 }
 
-/*#020016*/
+.kv {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
 
+  & > .k {
+    font-weight: bold;
+  }
+}
+
+
+button {
+  outline: none;
+  border: 0;
+}
+
+button.grey {
+  border-color: #888 !important;
+}
+
+button.red {
+  border-color: #c04242 !important;
+}
+
+button.blue {
+  border-color: #485ec2 !important;
+}
+
+button.green {
+  border-color: #44b344 !important;
+}
 
 /* GENERAL */
 
@@ -64,17 +118,6 @@ section > * {
   display: flex;
 }
 
-.header {
-  width: 100%;
-}
-
-.header > * {
-  margin: auto 0;
-}
-
-section .container {
-  margin: 25px 0;
-}
 
 .container.block {
   background-color: #020016; 
@@ -84,41 +127,9 @@ section .container {
   cursor: pointer;
 }
 
-.icon {
-  height: 18px;
-}
-
-.icon.large {
-  height: 24px;
-}
-
 /* #151443 */
 
 /* LEFT PANEL UNIQUE */
-
-.lpanel > .header {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  height: 64px;
-}
-
-.lpanel > .header img {
-  height: 42px;
-  cursor: pointer;
-  opacity: 0.85;
-}
-
-.container#pinned {
-  height: 160px;
-  border-radius: 10px;
-}
-
-.container#explorer {
-  height: calc(100% - 324px);
-  display: flex;
-  flex-direction: column;
-}
 
 .container#explorer.uploading {
   grid-template-rows: 40px 1fr;
@@ -147,16 +158,6 @@ section .container {
   font-size: 13px;
   color: #7ec77e;
   outline: 0;
-}
-
-
-
-button.red {
-  border-color: #e05959 !important;
-}
-
-button.green {
-  border-color: #5fcc5f !important;
 }
 
 .pinned .title {

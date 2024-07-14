@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import logo from './assets/logo_white.png'
+import { useEffect, useState } from 'react'
+
 import './main.css'
 import './styles/list.css'
 import MediaPlayer from './components/MediaPlayer'
@@ -7,6 +7,9 @@ import MediaPlayer from './components/MediaPlayer'
 import Explorer from './components/Explorer'
 
 import { AppProvider, loadContext } from './AppContext'
+import Header from './components/Header'
+import Details from './components/Details'
+import MetaEdit from './components/modals/MetaEdit'
 
 /*
 const walletConfig = {
@@ -61,8 +64,16 @@ const walletConfig = {
 }
 */
 
+enum ModalType {
+  DELETE,
+  EDIT,
+  SHARE
+}
+
 function Oculux() {
   const app = loadContext();
+  const [modal, setModal] = useState<ModalType | null>(null)
+
 
   useEffect(() => {
     console.log("init")
@@ -71,26 +82,14 @@ function Oculux() {
   }, [])
 
   return (
-    <main className='hfl'>
-      <section className='lpanel'>
-        <div id='header-page' className='header'>
-          <img src={logo} />
-        </div>
-        <div id='wrapper-pinned' className='pinned'>
-          <div id='pinned' className='container'>
-            <div className='title'>PINNED</div>
-            <div>
-              <div className='NA'>NO PINNED VIDEOS</div>
-            </div>
-          </div>
-        </div>
+    <>
+      <main>
+        <Header />
+        <Details edit={() => setModal(ModalType.EDIT)} />
         <Explorer />
-      </section>
-      <section className='rpanel'>
-        <MediaPlayer video={null}></MediaPlayer>
-        
-      </section>
-    </main>
+      </main>
+      {modal === ModalType.EDIT ? <MetaEdit quit={() => setModal(null)} /> : null}
+    </>
   )
 }
 
